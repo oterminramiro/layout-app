@@ -1,0 +1,88 @@
+version: '3.3'
+
+networks:
+  layout_app_network:
+
+services:
+
+  layout_app_back:
+    container_name: layout_app_back
+    hostname: layout_app_back
+    image: nanoninja/php-fpm
+    depends_on:
+      - layout_app_db
+    ports:
+      - 8000:8000
+    working_dir: /var/www/html/back
+    volumes:
+      - type: bind
+        source: ./laravel-app
+        target: /var/www/html/back
+    command: "php artisan serve --host=0.0.0.0 --port=8000"
+    restart: always
+    networks:
+      - layout_app_network
+
+  layout_app_front:
+    container_name: layout_app_front
+    hostname: layout_app_front
+    image: node:10.15.1
+    ports:
+      - "3000:3000"
+    working_dir: /var/www/html/front
+    volumes:
+      - type: bind
+        source: ./vue-app
+        target: /var/www/html/front
+    command: npm run dev
+    environment:
+      HOST: 0.0.0.0
+    networks:
+      - layout_app_network
+
+  layout_app_redis:
+    container_name: layout_app_redis
+    hostname: layout_app_redis
+    image: redis
+    networks:
+      - layout_app_network
+    command: ["redis-server", "--appendonly", "yes", "--requirepass password"]
+
+  layout_app_adminer:
+    container_name: layout_app_adminer
+    hostname: layout_app_adminer
+    image: adminer
+    ports:
+      - 8080:8080
+    networks:
+      - layout_app_network
+    links:
+     - layout_app_db
+    environment:
+      ADMINER_PLUGINS: tables-filter tinymce table-indexes-structure sql-log json-column edit-calendar dump-json dump-php dump-alter foreign-system
+    restart: always
+
+  layout_app_db:
+    container_name: layout_app_db
+    hostname: layout_app_db
+    image: mysql
+    ports:
+        - 3306:3306
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - ./filesystem/mysql:/var/lib/mysql
+    environment:
+      TZ: "America/Argentina/Buenos_Aires"
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: password
+    cap_add:
+      - SYS_NICE  # CAP_SYS_NICE
+    restart: always
+    networks:
+      - layout_app_network
+
+volumes:
+  pgdata:
+    #external: true
