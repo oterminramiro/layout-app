@@ -24,19 +24,11 @@ services:
       - layout_app_network
 
   layout_app_front:
+    build: ./vue-app
     container_name: layout_app_front
     hostname: layout_app_front
-    image: node:10.15.1
-    ports:
-      - "3000:3000"
-    working_dir: /var/www/html/front
-    volumes:
-      - type: bind
-        source: ./vue-app
-        target: /var/www/html/front
-    command: npm run dev
     environment:
-      HOST: 0.0.0.0
+      - HOST=0.0.0.0
     networks:
       - layout_app_network
 
