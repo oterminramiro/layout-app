@@ -6,9 +6,9 @@ networks:
 services:
 
   layout_app_back:
+    build: ./laravel-app
     container_name: layout_app_back
     hostname: layout_app_back
-    image: nanoninja/php-fpm
     depends_on:
       - layout_app_db
     ports:
