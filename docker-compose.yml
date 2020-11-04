@@ -13,9 +13,9 @@ services:
       - ./docker/dev/nginx/logs:/var/log/nginx
     ports:
       # Nuxt port
-      - 8080:80
+      - 5000:80
       # Laravel port
-      - 8081:81
+      - 8000:81
     links:
       - client
       - php
@@ -29,7 +29,7 @@ services:
       - ./api:/var/www/api
     environment:
       # If you down want to use xDebug, set remote_enable=0
-      XDEBUG_CONFIG: "remote_enable=1"
+      XDEBUG_CONFIG: "remote_enable=0"
       PHP_IDE_CONFIG: "serverName=Docker"
     links:
       - database
@@ -38,7 +38,7 @@ services:
   adminer:
     image: adminer
     ports:
-      - 3000:8080
+      - 8080:8080
     links:
      - database
     environment:
