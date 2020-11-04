@@ -1,6 +1,6 @@
-[submodule "laravel-app"]
-	path = laravel-app
-	url = https://github.com/oterminramiro/laravel-app
-[submodule "vue-app"]
-	path = vue-app
-	url = https://github.com/oterminramiro/vue-app
+[submodule "client"]
+	path = client
+	url = git@github.com:oterminramiro/vue-app.git
+[submodule "api"]
+	path = api
+	url = git@github.com:oterminramiro/laravel-app.git
