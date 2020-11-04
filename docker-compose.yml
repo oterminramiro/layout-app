@@ -1,62 +1,51 @@
-version: '3.3'
+version: '3'
 
-networks:
-  layout_app_network:
+######### Services ###################################
 
 services:
-
-  layout_app_back:
-    build: ./laravel-app
-    container_name: layout_app_back
-    hostname: layout_app_back
-    depends_on:
-      - layout_app_db
-    ports:
-      - 8000:8000
-    working_dir: /var/www/html/back
+  # Server container
+  nginx:
+    build:
+      context: docker/dev/nginx
+      dockerfile: Dockerfile
     volumes:
-      - type: bind
-        source: ./laravel-app
-        target: /var/www/html/back
-    command: "php artisan serve --host=0.0.0.0 --port=8000"
-    restart: always
-    networks:
-      - layout_app_network
+      - ./:/var/www
+      - ./docker/dev/nginx/logs:/var/log/nginx
+    ports:
+      # Nuxt port
+      - 8080:80
+      # Laravel port
+      - 8081:81
+    links:
+      - client
+      - php
 
-  layout_app_front:
-    build: ./vue-app
-    container_name: layout_app_front
-    hostname: layout_app_front
+  # PHP FastCGI Process Manager container
+  php:
+    build:
+      context: docker/dev/php
+      dockerfile: Dockerfile
+    volumes:
+      - ./api:/var/www/api
     environment:
-      - HOST=0.0.0.0
-    networks:
-      - layout_app_network
+      # If you down want to use xDebug, set remote_enable=0
+      XDEBUG_CONFIG: "remote_enable=1"
+      PHP_IDE_CONFIG: "serverName=Docker"
+    links:
+      - database
+      - redis
 
-  layout_app_redis:
-    container_name: layout_app_redis
-    hostname: layout_app_redis
-    image: redis
-    networks:
-      - layout_app_network
-    command: ["redis-server", "--appendonly", "yes", "--requirepass password"]
-
-  layout_app_adminer:
-    container_name: layout_app_adminer
-    hostname: layout_app_adminer
+  adminer:
     image: adminer
     ports:
-      - 8080:8080
-    networks:
-      - layout_app_network
+      - 3000:8080
     links:
-     - layout_app_db
+     - database
     environment:
       ADMINER_PLUGINS: tables-filter tinymce table-indexes-structure sql-log json-column edit-calendar dump-json dump-php dump-alter foreign-system
     restart: always
 
-  layout_app_db:
-    container_name: layout_app_db
-    hostname: layout_app_db
+  database:
     image: mysql
     ports:
         - 3306:3306
@@ -72,9 +61,27 @@ services:
     cap_add:
       - SYS_NICE  # CAP_SYS_NICE
     restart: always
-    networks:
-      - layout_app_network
+
+  # Redis container
+  redis:
+    build:
+      context: docker/dev/redis
+      dockerfile: Dockerfile
+    volumes:
+      - redis:/data
+    ports:
+      - 63791:6379
+
+  # Client container
+  client:
+    build:
+      context: docker/dev/client
+      dockerfile: Dockerfile
+    volumes:
+      - ./client:/var/www/client
+
+######### Volumes ###################################
 
 volumes:
-  pgdata:
-    #external: true
+  redis:
+    driver: local
